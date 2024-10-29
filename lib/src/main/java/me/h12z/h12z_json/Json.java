@@ -1,73 +1,28 @@
 package me.h12z.h12z_json;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.nio.file.*;
 
 public class Json {
 
-    public static class JSONObject {
-        private final Map<String, Object> map;
-
-        public JSONObject() {
-            this.map = new HashMap<>();
-        }
-
-        public void put(String key, Object value) {
-            map.put(key, value);
-        }
-
-        public Object get(String key) {
-            return map.get(key);
-        }
-
-        @Override
-        public String toString() {
-            return map.toString();
-        }
-    }
-
-    public static class JSONArray {
-        private final List<Object> list;
-
-        public JSONArray() {
-            this.list = new ArrayList<>();
-        }
-
-        public void add(Object value) {
-            list.add(value);
-        }
-
-        public Object get(int index) {
-            return list.get(index);
-        }
-
-        @Override
-        public String toString() {
-            return list.toString();
-        }
-    }
-
-    // Entfernen der Leerzeichen außerhalb von Strings
-    public static String removeWhitespace(String json) {
+    private static String removeWhitespace(String json) {
         StringBuilder result = new StringBuilder();
         boolean inString = false;
 
         for (int i = 0; i < json.length(); i++) {
             char c = json.charAt(i);
             if (c == '"') {
-                inString = !inString;  // Wechseln des String-Zustands
+                inString = !inString;
             }
             if (!inString && Character.isWhitespace(c)) {
-                continue;  // Leerzeichen außerhalb eines Strings überspringen
+                continue;
             }
             result.append(c);
         }
         return result.toString();
     }
 
-    public static JSONObject parseJSONObject(String json) {
+    private static JSONObject parseJSONObject(String json) {
         json = removeWhitespace(json);
         json = json.trim();
         if (!json.startsWith("{") || !json.endsWith("}")) {
@@ -80,17 +35,14 @@ public class Json {
         int i = 0;
 
         while (i < length) {
-            // Schlüssel parsen
             if (json.charAt(i) == '"') {
                 int keyEnd = json.indexOf('"', i + 1);
                 String key = json.substring(i + 1, keyEnd);
                 i = keyEnd + 1;
 
-                // Suchen des Doppelpunkts
                 while (json.charAt(i) != ':') i++;
                 i++;
 
-                // Wert parsen
                 while (json.charAt(i) == ' ') i++;
                 Object value;
                 if (json.charAt(i) == '{') {
@@ -111,7 +63,7 @@ public class Json {
                     i = valEnd;
                 }
 
-                jsonObject.put(key, value);
+                jsonObject.add(key, value);
             }
 
             while (i < length && json.charAt(i) != ',') i++;
@@ -121,7 +73,7 @@ public class Json {
         return jsonObject;
     }
 
-    public static JSONArray parseJSONArray(String json) {
+    private static JSONArray parseJSONArray(String json) {
         json = json.trim();
         if (!json.startsWith("[") || !json.endsWith("]")) {
             throw new IllegalArgumentException("Ungültiges JSON-Array");
@@ -197,10 +149,42 @@ public class Json {
         }
     }
 
-    public static void main(String[] args) {
-        String jsonString = "{\"hi\":{\"hi\":\"hi\", \"bye\":[\"bye\":\"bye\"]}}";
-        JSONObject jsonObject = parseJSONObject(jsonString);
-        System.out.println(jsonObject);
+    public static JSONObject parse(String json) {
+
+        return parseJSONObject(json);
+
+    }
+
+    public static JSONObject parseFile(File jsonFile) throws IOException {
+
+        if(!jsonFile.getParentFile().exists()) jsonFile.getParentFile().mkdirs();
+
+        if(!jsonFile.exists()) jsonFile.createNewFile();
+
+        String json = Files.readString(Paths.get(jsonFile.getAbsolutePath()));
+
+        return parse(json);
+
+    }
+
+    public static JSONObject parseFile(String path) throws IOException {
+
+        File jsonFile = new File(path);
+
+        return parseFile(jsonFile);
+
+    }
+
+    public static void save(JSONObject json, File file) throws IOException {
+
+        json.save(file);
+
+    }
+
+    public static void save(JSONObject json, String path) throws IOException {
+
+        json.save(path);
+
     }
     
 }

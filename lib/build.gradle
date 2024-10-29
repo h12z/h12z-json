@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "com.github.h12z"
-version = "v1.0.0"
+version = "v1.0.1"
 
 repositories {
     // Use Maven Central for resolving dependencies.

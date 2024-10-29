@@ -49,7 +49,26 @@ public class Json {
         }
     }
 
+    // Entfernen der Leerzeichen außerhalb von Strings
+    public static String removeWhitespace(String json) {
+        StringBuilder result = new StringBuilder();
+        boolean inString = false;
+
+        for (int i = 0; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (c == '"') {
+                inString = !inString;  // Wechseln des String-Zustands
+            }
+            if (!inString && Character.isWhitespace(c)) {
+                continue;  // Leerzeichen außerhalb eines Strings überspringen
+            }
+            result.append(c);
+        }
+        return result.toString();
+    }
+
     public static JSONObject parseJSONObject(String json) {
+        json = removeWhitespace(json);
         json = json.trim();
         if (!json.startsWith("{") || !json.endsWith("}")) {
             throw new IllegalArgumentException("Ungültiges JSON-Objekt");
@@ -179,7 +198,7 @@ public class Json {
     }
 
     public static void main(String[] args) {
-        String jsonString = "{\"hi\":{\"hi\":\"hi\",\"bye\":[\"bye\":\"bye\"]}}";
+        String jsonString = "{\"hi\":{\"hi\":\"hi\", \"bye\":[\"bye\":\"bye\"]}}";
         JSONObject jsonObject = parseJSONObject(jsonString);
         System.out.println(jsonObject);
     }

@@ -11,6 +11,9 @@ plugins {
     id 'java-library'
 }
 
+group = "com.github.h12z"
+version = "v1.0.0"
+
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()

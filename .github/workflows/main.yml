@@ -1,0 +1,54 @@
+name: Publish to FTP
+
+on:
+  push:
+    branches:
+      - publish  # Passe ggf. den Branch an, auf den die Action reagieren soll
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 11  # Passe die JDK-Version an, falls eine andere benötigt wird
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+
+    - name: Run Gradle publishToMavenLocal
+      run: ./gradlew publishToMavenLocal
+
+    - name: Get Latest Version Folder
+      id: get_version
+      run: |
+        # Pfad zu dem Verzeichnis
+        local_repo="$HOME/.m2/repository/me/h12z/h12z-json"
+        # Bestimme die neueste Version
+        latest_version=$(ls -1 $local_repo | sort -V | tail -n 1)
+        echo "Latest version is $latest_version"
+        # Setze die Version als GitHub Actions Ausgabe
+        echo "version=$latest_version" >> $GITHUB_OUTPUT
+
+    - name: Upload Files to FTP
+      env:
+        FTP_HOST: ${{ secrets.FTP_HOST }}
+        FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+        FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      run: |
+        local_repo="$HOME/.m2/repository/me/h12z/h12z-json/${{ steps.get_version.outputs.version }}"
+        remote_dir="/htdocs/releases/me/h12z/h12z-json/${{ steps.get_version.outputs.version }}"
+        
+        # Verwende lftp für den Upload, installiere es falls nötig
+        sudo apt-get update
+        sudo apt-get install -y lftp
+
+        # Lade die Dateien hoch
+        lftp -c "
+          open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_HOST;
+          mirror -R $local_repo $remote_dir;
+          bye
+        "

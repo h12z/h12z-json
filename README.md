@@ -4,12 +4,12 @@ Implementation:
 
 repositorys {
   mavenCentral()
-  maven { url = "https://jitpack.io/" }
+  maven { url = "https://h12z.me/releases/" }
 }
 
 dependencies {
 
-  implementation "com.github.h12z:h12z-json:v1.0.1"
+  implementation "me.h12z:h12z-json:1.0.1"
 
 }
 

@@ -12,129 +12,91 @@ public class JSONObject {
         this.map = new HashMap<>();
     }
 
-    public void add(String path, Object value) {
-        String[] tokens = path.split("/");
-        Object current = map;
-
-        for (int i = 0; i < tokens.length; i++) {
-            String token = tokens[i];
-            boolean isLastToken = (i == tokens.length - 1);
-            current = navigateAndPut(current, token, isLastToken ? value : null, isLastToken);
-        }
+    /**
+     * Adds a value under a certain name (If the value already exists it is overwritten)
+     * @param key
+     * The key of the value to be added
+     * @param value
+     * The value to be added
+     */
+    public void add(String key, Object value) {
+        map.put(key, value);
     }
 
-    private Object navigateAndPut(Object current, String token, Object value, boolean isLastToken) {
-        Pattern arrayPattern = Pattern.compile("([a-zA-Z0-9_]+)\\[(\\d+|\\*)\\]");
-        Matcher matcher = arrayPattern.matcher(token);
-
-        if (matcher.matches()) {
-            String key = matcher.group(1);
-            String indexOrAsterisk = matcher.group(2);
-
-            if (current instanceof Map) {
-                Map<String, Object> map = (Map<String, Object>) current;
-                current = map.computeIfAbsent(key, k -> new ArrayList<>());
-            }
-
-            if (current instanceof List) {
-                List<Object> list = (List<Object>) current;
-
-                if (indexOrAsterisk.equals("*")) {
-                    if (isLastToken) {
-                        list.add(value);
-                    } else {
-                        list.add(new HashMap<>());
-                    }
-                    return list.get(list.size() - 1);
-                } else {
-                    int index = Integer.parseInt(indexOrAsterisk);
-                    while (list.size() <= index) {
-                        list.add(new HashMap<>());
-                    }
-                    if (isLastToken) {
-                        list.set(index, value);
-                    }
-                    return list.get(index);
-                }
-            } else {
-                throw new IllegalArgumentException("Ungültiger Array-Zugriff: " + token);
-            }
-        } else {
-            if (current instanceof Map) {
-                Map<String, Object> map = (Map<String, Object>) current;
-                if (isLastToken) {
-                    map.put(token, value);
-                } else {
-                    current = map.computeIfAbsent(token, k -> new HashMap<>());
-                }
-                return map.get(token);
-            }
-        }
-        return null;
+    private Object getAsObject(String key) {
+        return map.get(key);
     }
 
-    public Object getAsObject(String path) {
-        String[] tokens = path.split("/");
-        Object current = map;
-
-        for (String token : tokens) {
-            current = navigate(current, token);
-            if (current == null) {
-                return null;
-            }
-        }
-        return current;
-    }
-
-    private Object navigate(Object current, String token) {
-        Pattern arrayPattern = Pattern.compile("([a-zA-Z0-9_]+)\\[(\\d+)\\]");
-        Matcher matcher = arrayPattern.matcher(token);
-
-        if (matcher.matches()) {
-            String key = matcher.group(1);
-            int index = Integer.parseInt(matcher.group(2));
-
-            if (current instanceof Map) {
-                current = ((Map<?, ?>) current).get(key);
-            }
-            if (current instanceof List && index < ((List<?>) current).size()) {
-                return ((List<?>) current).get(index);
-            } else {
-                return null;
-            }
-        } else {
-            if (current instanceof Map) {
-                return ((Map<?, ?>) current).get(token);
-            }
-        }
-        return null;
-    }
-
+    /**
+     * Gets the json object of a certain key
+     * @param key
+     * The wanted key
+     * @return
+     * The wanted json object (returns null if it isn't a json object or if it doesn't exist)
+     */
     public JSONObject get(String key) {
+        if (!map.containsKey(key))
+            return null;
         if (!(getAsObject(key) instanceof JSONObject))
             return null;
         return (JSONObject) getAsObject(key);
     }
 
+    /**
+     * Gets the json array of a certain key
+     * @param key
+     * The wanted key
+     * @return
+     * The wanted json array (returns null if it isn't a json array or if it doesn't exist)
+     */
     public JSONArray getAsJsonArray(String key) {
+        if (!map.containsKey(key))
+            return null;
         if (!(getAsObject(key) instanceof JSONArray))
             return null;
         return (JSONArray) getAsObject(key);
     }
 
+    /**
+     * Gets the string value of a certain key
+     * @param key
+     * The wanted key
+     * @return
+     * The wanted string value (returns null if it isn't a string or if it doesn't exist)
+     */
     public String getAsString(String key) {
+        if (!map.containsKey(key))
+            return null;
         if (!(getAsObject(key) instanceof String))
             return null;
         return (String) getAsObject(key);
     }
 
+    /**
+     * Gets the double value of a certain key
+     * @param key
+     * The wanted key
+     * @return
+     * The wanted double value (returns null if it isn't a double or if it doesn't exist)
+     */
     public Double getAsDouble(String key) {
+        if (!map.containsKey(key))
+            return null;
         if (!(getAsObject(key) instanceof Double))
             return 0.0;
         return (Double) getAsObject(key);
     }
 
+    /**
+     * Gets the integer value of a certain key
+     * @param key
+     * The wanted key
+     * @return
+     * The wanted integer value (returns null if it isn't an integer or if it doesn't exist)
+     */
     public Integer getAsInteger(String key) {
+        if (!map.containsKey(key))
+            return null;
         if (!(getAsObject(key) instanceof Integer))
             return 0;
         return (Integer) getAsObject(key);
@@ -172,6 +134,11 @@ public class JSONObject {
         return json.toString();
     }
 
+    /**
+     * Saves the json object to a file
+     * @param file
+     * The File to be saved to
+     */
     public void save(File file) throws IOException {
 
         if(!file.getParentFile().exists()) file.getParentFile().mkdirs();
@@ -183,6 +150,11 @@ public class JSONObject {
 
     }
 
+    /**
+     * Saves the json object to a given file path
+     * @param path
+     * The path of the File to be saved to
+     */
     public void save(String path) throws IOException {
 
         save(new File(path));
